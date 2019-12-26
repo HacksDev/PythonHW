@@ -25,8 +25,8 @@
 | Str | '' | False
 | Str | 'a' | True
 | Str | '\0' | True
-| Turple | () | False
-| Turple | (a) | True
+| Tuple | () | False
+| Tuple | (a) | True
 | List | [] | False
 | List | [1] | True
 | Dict | {} | False
