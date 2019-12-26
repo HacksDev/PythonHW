@@ -17,5 +17,8 @@
 asdfdsf324 ?3 efref4r4 23r(*&^*& a bb
 ```
 
-
 ## Report
+
+[File 1.2](Task1.2.py)
+
+```print(*set(input("Введите символы разделенные пробелом:").split()))```
