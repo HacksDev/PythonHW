@@ -22,7 +22,7 @@
 [File 1.5](Task1.5.py)
 
 Solution with sets
-```
+```python
 numbers = list(map(int,input("Введите числа через пробел: \n").split()))
 maximum, minimum = max(numbers), min(numbers)
 diff = list(set([k for k in range(minimum, maximum, 1)]) - set(numbers))
@@ -30,7 +30,7 @@ if (diff): print(min(diff))
 ```
 
 Solution with range
-```
+```python
 numbers = list(map(int,input("Введите числа через пробел: \n").split()))
 for i in range(min(numbers), max(numbers)): 
     if (not i in numbers): 

@@ -20,7 +20,7 @@
 
 [File 2.1](Task2.1.py)   
 
-```
+```python
 f = open('/etc/passwd', 'r')
 stringsList = f.readlines()
 counterDict = {}

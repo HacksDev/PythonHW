@@ -14,7 +14,7 @@ in either base, may not include leading zeros.)
 
 [File 1.6](Task1.6.py)
 
-```
+```python
 sum = 0
 for i in range(1000000):
     base10 = str(i)

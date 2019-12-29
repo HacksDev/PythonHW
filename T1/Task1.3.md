@@ -27,7 +27,7 @@
 
 [File 1.3](Task1.3.py)
 
-```
+```python
 words = {}
 inputResult = list(input("Введите символы разделенные пробелом: \n").lower().split());
 for elem in inputResult:

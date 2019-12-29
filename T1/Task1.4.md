@@ -23,7 +23,7 @@
 
 [File 1.4](Task1.4.py)
 
-```
+```python
 inputResult = input("Введите символы (поддерживает отрицательные числа): \n")
 numbers = [];
 temp = ""
