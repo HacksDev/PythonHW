@@ -5,3 +5,4 @@ Python working repo.
 
 [Task 1](T1/Task1.md)    
 [Task 2](T2/Task2.md)    
+[Task 3](T3/Task3.md)    
