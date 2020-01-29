@@ -4,32 +4,36 @@ import socket
 import binascii
 
 
+class OpcodeType(Enum):
+    DEFAULT = 0
+    INVERSE = 1
+    STATUS = 2
+
+
+class RCODEType(Enum):
+    SUCCESS = 0
+    WRONG_FORMAT = 1
+    DNS_ERROR = 2
+    NAME_NOT_EXIST = 3
+    REQ_NOT_SUPPORT = 4
+    SECURITY_RULES = 5
+
+
+class QueryType(Enum):
+    TEST = 0
+    A = 1
+    AAAA = 28
+    CNAME = 5
+    DNAME = 39
+    MX = 15
+    NS = 2
+    PTR = 12
+
+
+class QCLASSType(Enum):
+    INTERNET = 1
+
 class DNSData:
-    class OpcodeType(Enum):
-        DEFAULT = 0
-        INVERSE = 1
-        STATUS = 2
-
-    class RCODEType(Enum):
-        SUCCESS = 0
-        WRONG_FORMAT = 1
-        DNS_ERROR = 2
-        NAME_NOT_EXIST = 3
-        REQ_NOT_SUPPORT = 4
-        SECURITY_RULES = 5
-
-    class QueryType(Enum):
-        TEST = 0
-        A = 1
-        AAAA = 28
-        CNAME = 5
-        DNAME = 39
-        MX = 15
-        NS = 2
-        PTR = 12
-
-    class QCLASSType(Enum):
-        INTERNET = 1
 
     OPCODE_TYPE = OpcodeType
     RCODE_TYPE = RCODEType
@@ -55,6 +59,8 @@ class DNSData:
     QNAME = None
     QTYPE = None
     QCLASS = None
+
+    parsedHosts = []
 
     def generate_id(self):
         return self.n2xs(random.randint(1, 65535), pos=4)
@@ -89,7 +95,7 @@ class DNSData:
                 self.QNAME += "".join([self.c2xs(c) for c in word])
         self.QNAME += "00"  # 00 - END QNAME
 
-        self.QTYPE = self.n2xs(self.QUERY_TYPE.A.value, 4)
+        self.QTYPE = self.n2xs(self.QUERY_TYPE.AAAA.value, 4)
         self.QCLASS = self.n2xs(self.QCLASS_TYPE.INTERNET.value, 4)
         return self.QNAME + self.QTYPE + self.QCLASS
 
@@ -103,8 +109,69 @@ class DNSData:
     def assemble_response(self):
         pass
 
-    def parse_request_data(self, string):
-        pass
+    @staticmethod
+    def parse_head(seq, data):
+        data.ID = seq[0:4]
+        flags = bin(int(seq[4:8], 16))[2:]
+        data.QR = flags[0]
+        data.Opcode = data.OPCODE_TYPE(int(flags[1:5], 2))
+        data.AA = data.bs2i2s(flags[5], 2)
+        data.TC = data.bs2i2s(flags[6], 2)
+        data.RD = data.bs2i2s(flags[7], 2)
+        data.RA = data.bs2i2s(flags[8], 2)
+        data.Z = str(flags[9:12])
+        data.RCODE = data.RCODE_TYPE(int(flags[12:16], 2))
+
+        data.QDCOUNT = seq[8:12]
+        data.ANCOUNT = seq[12:16]
+        data.NSCOUNT = seq[16:20]
+        data.ARCOUNT = seq[20:24]
+
+    @staticmethod
+    def parse_request_data(question):
+        data = DNSData()
+        DNSData().parse_head(question, data)
+
+        #
+        # # ########### Black magic
+        # hostname = ""
+        # counter = 24
+        # for r in range(int(data.QDCOUNT)):
+        #     hostname, counter = data.read_names(answer, counter)
+        #     counter += 2
+        #
+        # data.QTYPE = data.QUERY_TYPE(int(answer[counter: counter + 4], 16))
+        # counter += 4
+        # data.QCLASS = data.QCLASS_TYPE(int(answer[counter: counter + 4], 2))
+        # counter += 4
+        #
+        # hosts = []
+        # for r in range(int(data.ANCOUNT)):
+        #     hostname, counter = data.read_names(answer, counter)
+        #     QTYPE = data.QUERY_TYPE(int(answer[counter: counter + 4], 16))
+        #     counter += 4
+        #     QCLASS = data.QCLASS_TYPE(int(answer[counter: counter + 4], 2))
+        #     counter += 4
+        #     TTL = int(answer[counter: counter + 8], 16)
+        #     counter += 8
+        #
+        #     if (QTYPE == data.QTYPE.A):
+        #         dataLength = int(answer[counter: counter + 4], 16)
+        #         counter += 4
+        #         tempName = answer[counter: counter + 2 * dataLength]
+        #         counter += 2 * dataLength
+        #         IP = ".".join([str(int(tempName[ch:ch + 2], 16)) for ch in range(0, len(tempName), 2)])
+        #         hosts.append({"hostname": hostname, "QTYPE": QTYPE, "QCLASS": QCLASS, "TTL": TTL, "IP": IP})
+        #     if (QTYPE == data.QTYPE.AAAA):
+        #         dataLength = int(answer[counter: counter + 4], 16)
+        #         counter += 4
+        #         tempName = answer[counter: counter + 2 * dataLength]
+        #         counter += 2 * dataLength
+        #         IP = ":".join([str(tempName[ch:ch + 4]) for ch in range(0, len(tempName), 4)])
+        #         hosts.append({"hostname": hostname, "QTYPE": QTYPE, "QCLASS": QCLASS, "TTL": TTL, "IP": IP})
+        #
+        # data.parsedHosts = hosts
+        # return data
 
     def read_names(self, string, position):
         hostname = ""
@@ -155,7 +222,7 @@ class DNSData:
             hostname, counter = data.read_names(answer, counter)
             counter += 2
 
-        data.QTYPE = data.QUERY_TYPE(int(answer[counter: counter + 4], 2))
+        data.QTYPE = data.QUERY_TYPE(int(answer[counter: counter + 4], 16))
         counter += 4
         data.QCLASS = data.QCLASS_TYPE(int(answer[counter: counter + 4], 2))
         counter += 4
@@ -163,7 +230,7 @@ class DNSData:
         hosts = []
         for r in range(int(data.ANCOUNT)):
             hostname, counter = data.read_names(answer, counter)
-            QTYPE = data.QUERY_TYPE(int(answer[counter: counter + 4], 2))
+            QTYPE = data.QUERY_TYPE(int(answer[counter: counter + 4], 16))
             counter += 4
             QCLASS = data.QCLASS_TYPE(int(answer[counter: counter + 4], 2))
             counter += 4
@@ -175,12 +242,17 @@ class DNSData:
                 counter += 4
                 tempName = answer[counter: counter + 2 * dataLength]
                 counter += 2 * dataLength
-                IP = ".".join([ str(int(tempName[ch:ch + 2], 16)) for ch in range(0, len(tempName), 2)])
+                IP = ".".join([str(int(tempName[ch:ch + 2], 16)) for ch in range(0, len(tempName), 2)])
+                hosts.append({"hostname": hostname, "QTYPE": QTYPE, "QCLASS": QCLASS, "TTL": TTL, "IP": IP})
+            if (QTYPE == data.QTYPE.AAAA):
+                dataLength = int(answer[counter: counter + 4], 16)
+                counter += 4
+                tempName = answer[counter: counter + 2 * dataLength]
+                counter += 2 * dataLength
+                IP = ":".join([str(tempName[ch:ch + 4]) for ch in range(0, len(tempName), 4)])
                 hosts.append({"hostname": hostname, "QTYPE": QTYPE, "QCLASS": QCLASS, "TTL": TTL, "IP": IP})
 
-
-        print(hosts)
-
+        data.parsedHosts = hosts
         return data
 
     # Number to heX String
@@ -201,24 +273,51 @@ class DNSServer:
     DNS_SERVERS = ['8.8.8.8', '8.8.4.4']
     ADDRESS_SPACE = socket.AF_INET
     PROTO = socket.SOCK_DGRAM
-    socket = None
+    socket_internal = None
+    socket_external = None
+
+    OPCODE_TYPE = OpcodeType
+    RCODE_TYPE = RCODEType
+    QUERY_TYPE = QueryType
+    QCLASS_TYPE = QCLASSType
+
+    resolvingTable = []
 
     def __init__(self):
-        self.socket = socket.socket(self.ADDRESS_SPACE, self.PROTO)
+        self.socket_internal = socket.socket(self.ADDRESS_SPACE, self.PROTO)
+        self.socket_external = socket.socket(self.ADDRESS_SPACE, self.PROTO)
+        self.run_server()
+
+    def run_server(self):
+        try:
+            self.socket_internal.bind(("127.0.0.1", self.PORT))
+            while True:
+                data, addr = self.socket_internal.recvfrom(4096)
+                print(binascii.hexlify(data).decode("utf-8"))
+                print(addr)
+        except:
+            print("[ERROR] Cannot to start DNS server!")
+
 
     def send_data_to(self, query):
         try:
-            self.socket.sendto(binascii.unhexlify(query), ("8.8.8.8", 53))
-            data, _ = self.socket.recvfrom(4096)
+            self.socket_external.settimeout(2)
+            for addr in self.DNS_SERVERS:
+                try:
+                    self.socket_external.sendto(binascii.unhexlify(query), (addr, self.PORT))
+                    data, _ = self.socket_external.recvfrom(4096)
+                    break
+                except Exception:
+                    pass
         finally:
-            self.socket.close()
+            self.socket_external.close()
         return binascii.hexlify(data).decode("utf-8")
 
     def send_request(self):
         dnsData = DNSData()
         query = dnsData.assemble_request(['google.com'])
         responseDnsData = DNSData().parse_response_data(self.send_data_to(query))
+        self.resolvingTable.append(responseDnsData.parsedHosts)
 
 
 serv = DNSServer()
-serv.send_request()
