@@ -8,3 +8,4 @@ Python working repo.
 [Task 3](T3/Task3.md)    
 [Task 4](T4/Task4.md)    
 [Task 5](T5/Task5.md)    
+[Task 6](T5/Task6.md)    
