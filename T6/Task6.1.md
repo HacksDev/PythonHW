@@ -21,6 +21,7 @@ TTL при ответе задает, но сам игнорирует.
 ### How to run:
 
 ```
+pip install binascii
 python3 ./SimpleDNS.py
 ```
 
@@ -37,19 +38,16 @@ google.com
 [SimpleDNS](SimpleDNS.py)  
 
 
-python```
-
+```python
 from enum import Enum
 import random
 import socket
 import binascii
 
-
 class OpcodeType(Enum):
     DEFAULT = 0
     INVERSE = 1
     STATUS = 2
-
 
 class RCODEType(Enum):
     SUCCESS = 0
@@ -59,7 +57,6 @@ class RCODEType(Enum):
     REQ_NOT_SUPPORT = 4
     SECURITY_RULES = 5
     ALL = 17
-
 
 class QueryType(Enum):
     TEST = 0
@@ -71,10 +68,8 @@ class QueryType(Enum):
     NS = 2
     PTR = 12
 
-
 class QCLASSType(Enum):
     INTERNET = 1
-
 
 class DNSData:
     OPCODE_TYPE = OpcodeType
