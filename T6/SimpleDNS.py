@@ -292,8 +292,8 @@ class DNSServer:
         attemts = 2
         try:
             self.socket_internal.bind(("127.0.0.1", self.PORT))
+            print("[DNS] DNS Server started successfully! Use Ctrl + C to exit.")
             while True:
-                print("[DNS] DNS Server started successfully!")
                 data, addr = self.socket_internal.recvfrom(4096)
                 request = binascii.hexlify(data).decode("utf-8")
                 dnsdata = DNSData().parse_request_data(request)
@@ -348,4 +348,8 @@ class DNSServer:
         records = self.search_records(data)
         return DNSData().assemble_response(data, records)
 
-serv = DNSServer()
+
+try:
+    serv = DNSServer()
+except KeyboardInterrupt:
+    print("[DNS] Server successfully stopped!")
