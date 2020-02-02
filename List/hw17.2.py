@@ -20,4 +20,4 @@ def getCoords(filename):
 
 coords = getCoords(os.path.dirname(os.path.abspath(__file__))+'\\1.jpg')
 print(coords[0], coords[1])
-os.system("python Task5.1.py {} {}".format(coords[0], coords[1])) 
+os.system("python3 Task5.1.py {} {}".format(coords[0], coords[1]))
