@@ -1,7 +1,7 @@
 import geocoder
 import os
 import sys
-API_KEY = "0cd871cf1c01475ea28e5b0e4ac32a37"
+API_KEY = "ca3ebd75916f4b5fa633fac3b0563fab"
 
 argInp = []
 
